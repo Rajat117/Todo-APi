@@ -1,0 +1,225 @@
+<html>
+
+<head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <style>
+        * {
+            color: black;
+        }
+
+        ul {
+            list-style-type: none;
+        }
+
+        li {
+            color: black;
+            padding: 20px;
+        }
+
+        .checked {
+            text-decoration: line-through;
+        }
+    </style>
+    <script>
+        function createListCode(res) {
+            code += "<li id=" + res[i].id + " class=\'list-group-item d-flex justify-content-between align-items-center>\'>";
+            code += "<div  >";
+
+            if (res[i].is_completed == 0) {
+                code += "<input type=\"checkbox\"  value='0' onchange=\"checkBox(" + res[i].id + ")\"name=\"status\"> ";
+                code += "<input type=\"text\" style='border:none' value=" + res[i].caption + ">";
+            }
+            else {
+                code += "<input type=\"checkbox\"  checked value='1' onchange=\"checkBox(" + res[i].id + ")\"name=\"status\"> ";
+                code += "<input type=\"text\" class='checked' style='border:none' value=" + res[i].caption + ">";
+            }
+            code += "</div  >";
+            code += "<div  >"
+            code += "<button type=\"button\"  onclick=\"removeTask(this.value)\" class=\"btn btn-outline-primary\" value=" + res[i].id + " >Remove</button>";
+            code += "<button type=\"button\" onclick=\"updateTask(this.value)\" class=\"btn btn-outline-warning\" value=" + res[i].id + " >Update</button>";
+            code += "</div>"
+            code += "</li>";
+            return code;
+        }
+        function removeTask(value) {
+            $.ajax({
+                type: 'DELETE',
+                url: 'http://final.local.geekydev.com/delete.php',
+                data: { text1: value },
+                success: function (response) {
+                    $('#' + response).remove();
+                },
+                failure: function (err) {
+                    alert(err);
+                }
+            });
+        }
+        function updateTask(val1) {
+            var val2 = $("#" + val1 + " input[type=text]").val();
+            var val3 = $("#" + val1 + " input[type=checkbox]").val();
+            $.ajax({
+                type: 'PUT',
+                url: 'http://final.local.geekydev.com/update.php',
+                data: { id: val1, name: val2, status: val3 },
+                success: function (response) {
+                    $('#' + response.id).val(response.name);
+                },
+                failure: function (err) {
+                    alert(err);
+                }
+            });
+        }
+        function checkBox(val) {
+            $('#' + val + " input[type=text]").toggleClass('checked');
+            if (($('#' + val + " input[type=text]").hasClass('checked')) == true) {
+                $('#' + val + " input[type=checkbox]").val('1');
+
+            }
+            else {
+                $('#' + val + " input[type=checkbox]").val('0');
+            }
+            updateTask(val);
+
+        }
+        function listTask() {
+
+            $.ajax({
+                type: 'GET',
+                url: 'http://final.local.geekydev.com/getTasks.php',
+                data: { text1: 'list' },
+
+                success: function (response) {
+                    var res = JSON.parse((response));
+                    var code = "";
+                    for (let i = 0; i < res.length; i++) {
+                        code += "<li id=" + res[i].id + " class=\'list-group-item d-flex justify-content-between align-items-center>\'>";
+                        code += "<div  >";
+
+                        if (res[i].is_completed == 0) {
+                            code += "<input type=\"checkbox\"  value='0' onchange=\"checkBox(" + res[i].id + ")\"name=\"status\"> ";
+                            code += "<input type=\"text\" style='border:none' value=" + res[i].caption + ">";
+                        }
+                        else {
+                            code += "<input type=\"checkbox\"  checked value='1' onchange=\"checkBox(" + res[i].id + ")\"name=\"status\"> ";
+                            code += "<input type=\"text\" class='checked' style='border:none' value=" + res[i].caption + ">";
+                        }
+                        code += "</div  >";
+                        code += "<div  >"
+                        code += "<button type=\"button\"  onclick=\"removeTask(this.value)\" class=\"btn btn-outline-primary\" value=" + res[i].id + " >Remove</button>";
+                        code += "<button type=\"button\" onclick=\"updateTask(this.value)\" class=\"btn btn-outline-warning\" value=" + res[i].id + " >Update</button>";
+                        code += "</div>"
+                        code += "</li>";
+                    }
+                    $("#list").html(code);
+                },
+                failure: function (err) {
+                    alert(err);
+                }
+            });
+        }
+        function addTask() {
+            var val1 = ($("#task").val());
+            $.ajax({
+                type: 'POST',
+                url: 'http://final.local.geekydev.com/index.php',
+                data: { text1: val1 },
+                success: function (response) {
+                    var res = JSON.parse((response));
+                    code = "";
+                    code += "<li id=" + res[0].id + " class=\'list-group-item d-flex justify-content-between align-items-center>\'>";
+                    code += "<div  >";
+
+                    if (res[0].is_completed == 0) {
+                        code += "<input type=\"checkbox\"  value='0' onchange=\"checkBox(" + res[0].id + ")\"name=\"status\"> ";
+                        code += "<input type=\"text\" style='border:none' value=" + res[0].caption + ">";
+                    }
+                    else {
+                        code += "<input type=\"checkbox\"  checked value='1' onchange=\"checkBox(" + res[0].id + ")\"name=\"status\"> ";
+                        code += "<input type=\"text\" class='checked' style='border:none' value=" + res[0].caption + ">";
+                    }
+                    code += "</div  >";
+                    code += "<div  >"
+                    code += "<button type=\"button\"  onclick=\"removeTask(this.value)\" class=\"btn btn-outline-primary\" value=" + res[0].id + " >Remove</button>";
+                    code += "<button type=\"button\" onclick=\"updateTask(this.value)\" class=\"btn btn-outline-warning\" value=" + res[0].id + " >Update</button>";
+                    code += "</div>"
+                    code += "</li>";
+                    $('#list').append(code);
+                    // var node = document.createElement("LI");
+                    // node.setAttribute('class', 'list-group-item d-flex justify-content-between align-items-center');
+                    // node.setAttribute('id',res[0].id);
+                    // var inp = document.createElement("input");
+                    // document.createElement("INPUT");
+
+                    // inp.setAttribute("type", "text");
+                    // inp.setAttribute("value", res[0].caption);
+                    // node.appendChild(inp);
+                    // var check=document.createElement("INPUT");
+                    // check.setAttribute('type','checkbox');
+
+                    // document.getElementById("list").appendChild(node);
+                    // var div = document.createElement("DIV");
+
+                    // var btn = document.createElement('Button');
+                    // var text = document.createTextNode("Remove");
+                    // btn.appendChild(text);
+                    // btn.setAttribute('class', 'btn btn-outline-primary');
+                    // btn.setAttribute('value', res[0].id);
+                    // btn.addEventListener("click",removeTask());
+                    // div.appendChild(btn);
+                    // var btn = document.createElement('Button');
+                    // var text = document.createTextNode("Update");
+                    // btn.appendChild(text);
+                    // btn.setAttribute('class', 'btn btn-outline-warning');
+                    // btn.setAttribute('value', res[0].id);
+                    // div.appendChild(btn);
+                    // node.appendChild(div);
+                },
+                failure: function (err) {
+                    alert(err);
+                }
+            });
+        }
+        $(document).ready(function () {
+            listTask();
+            $("#sub").click(function (e) {
+                addTask();
+                e.preventDefault();
+            });
+            $('')
+        });
+    </script>
+</head>
+
+<body>
+    <div class="jumbotron text-center">
+        <h1>ToDo List Application PHP </h1>
+    </div>
+    <div class="container">
+        <form>
+            <div class="form-group">
+                <label for="Task">Task</label>
+                <input type="text" class="form-control" required id="task" name="item" aria-describedby="task"
+                    placeholder="Enter task">
+                <small id="emailHelp" class="form-text text-muted">Enter The task needed to be done</small>
+            </div>
+            <button id="sub" type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+    <div class="container">
+        <ul id="list" class="list-group"></ul>
+    </div>
+</body>
+
+</html>
